@@ -42,6 +42,7 @@ def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, po
         
 
         imageGen = add_images(sub_data, styles, steps)
+        #print(song_Data + "<------")
         add_subtitles(imageGen, subtitles)
         videoclip = VideoFileClip("./output/subs.mp4")
         videoclip = videoclip.set_audio(audioclip)
@@ -51,11 +52,14 @@ def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, po
 
 def add_images(sub_data, styles, steps):
     image_index = -1
-    current_video_generation = 0
+    current_video_generation = -1
     for i in sub_data: 
         image_index = image_index+1
+        current_video_generation = current_video_generation+1
+
+
         with open('./images/'+str(image_index)+'.png', 'wb') as f:
-            text_data = i[1].replace('♪', ', music vibe')
+            text_data = i[1].replace('♪', 'music ')
             text_data = text_data.replace('\\n', "-")
             text_data = text_data.strip()
             text_data += styles               
@@ -66,13 +70,23 @@ def add_images(sub_data, styles, steps):
             f.close()
 
         video_title = "videoGen"+str(current_video_generation)
-        video_title = "videoGen0"
+
+        if current_video_generation == 0:
+            video_title = "videoGen0"
+        else:
+            prevGen = (current_video_generation-1)
+            print("previus gen: videoGen"+str(prevGen)+".mp4")
+            video_title = "videoGen"+str(prevGen-1)
+
+        print("next gen: ./output/"+video_title+".mp4")
         video = VideoFileClip("./output/"+video_title+".mp4")
         image = ImageClip('./images/'+str(image_index)+'.png').set_start(i[0][0]).set_duration(15).set_pos(("center","top"))
         final = CompositeVideoClip([video, image])
         final.write_videofile("./output/videoGen"+str(current_video_generation)+".mp4", temp_audiofile='temp-audio.m4a', fps=5, remove_temp=True, codec="libx264", audio_codec="aac", threads=7)
-    
-    return "./output/videoGen"+str(current_video_generation)+".mp4"
+        current_video_generation = current_video_generation+1
+
+
+    return "./output/videoGen"+str(current_video_generation-1)+".mp4"
 
 
 def color_clip(size, duration, fps=5, color=(0,0,0), output='./output/videoGen0.mp4'):
@@ -106,8 +120,12 @@ def get_youtube_video_audio(url):
 def get_video_transcription(youtube_url):
     id=extract.video_id(youtube_url)
     transcript_list = YouTubeTranscriptApi.list_transcripts(id)
-    transcript = transcript_list.find_manually_created_transcript(['en'])  
+    try:
+        transcript = transcript_list.find_manually_created_transcript(['en'])  
+    except:
+        transcript = transcript_list.find_generated_transcript(['en'])
     return transcript.fetch()
+
 
 def cleanup_files():
     [f.unlink() for f in Path("./video-audio").glob("*") if f.is_file()] 
@@ -115,4 +133,4 @@ def cleanup_files():
 
 
 if __name__ == '__main__':
-    create_video("https://www.youtube.com/watch?v=VuNIsY6JdUw", ", A digital illustration, detailed, trending in artstation, fantasy vivid colors”", 10, 5)
+    create_video("https://www.youtube.com/watch?v=Vg--KbkIffY", ", A high contrast digital illustration, trending on artstation HQ, Kitchen, Food", 60, 6)
