@@ -44,7 +44,6 @@ def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, po
 
         build_thumbnail(youtube_video_title+ ", album cover"+styles, steps)
         imageGen = add_images(sub_data, styles, steps)
-        print(subtitles)
         add_subtitles(imageGen, subtitles)
         videoclip = VideoFileClip("./output/subs.mp4")
         videoclip = videoclip.set_audio(audioclip)
