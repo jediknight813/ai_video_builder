@@ -1,5 +1,6 @@
 from hashlib import new
 import py_compile
+from re import I
 from moviepy.editor import *
 from moviepy.video.tools.subtitles import SubtitlesClip
 from pydub import *
