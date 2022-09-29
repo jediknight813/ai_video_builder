@@ -1,8 +1,8 @@
 from hashlib import new
+import py_compile
 from moviepy.editor import *
 from moviepy.video.tools.subtitles import SubtitlesClip
 from pydub import *
-from PIL import Image
 import subprocess
 from pytube import YouTube
 import os
@@ -16,7 +16,7 @@ def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, po
     subtitles = []
     size = (1000, 512)
     cleanup_files()
-    get_youtube_video_audio(youtube_url)
+    youtube_video_title = get_youtube_video_audio(youtube_url)
     song_Data = get_video_transcription(youtube_url)
 
     if length == "full":
@@ -41,8 +41,8 @@ def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, po
                 sub_data.append([(i["start"], i["duration"]+i["start"]), i["text"]])
         
 
+        build_thumbnail(youtube_video_title+ ", album cover"+styles, steps)
         imageGen = add_images(sub_data, styles, steps)
-        #print(song_Data + "<------")
         add_subtitles(imageGen, subtitles)
         videoclip = VideoFileClip("./output/subs.mp4")
         videoclip = videoclip.set_audio(audioclip)
@@ -59,7 +59,11 @@ def add_images(sub_data, styles, steps):
 
 
         with open('./images/'+str(image_index)+'.png', 'wb') as f:
-            text_data = i[1].replace('♪', 'music ')
+            if (all(ch in '♪' for ch in i[1])):
+                text_data = i[1].replace('♪', 'music ')
+            else:
+                text_data = i[1].replace('♪', '')
+
             text_data = text_data.replace('\\n', "-")
             text_data = text_data.strip()
             text_data += styles               
@@ -89,6 +93,10 @@ def add_images(sub_data, styles, steps):
     return "./output/videoGen"+str(current_video_generation-1)+".mp4"
 
 
+def build_thumbnail(title, steps):
+     subprocess.call(["python3", "./stable_diffusion/demo.py", "--prompt", title, "--num-inference-steps", str(steps), "--output", ('./images/thumbnail.png')])
+
+
 def color_clip(size, duration, fps=5, color=(0,0,0), output='./output/videoGen0.mp4'):
     ColorClip(size, color, duration=duration).write_videofile(output, fps=fps)
     return "finished"
@@ -97,12 +105,9 @@ def color_clip(size, duration, fps=5, color=(0,0,0), output='./output/videoGen0.
 def add_subtitles(video_path, subtitles):
     print("here is the path: " + video_path)
     generator = lambda txt: TextClip(txt, font='Arial', fontsize=24, color='white')
-
     subtitles = SubtitlesClip(subtitles, generator)
-
     video = VideoFileClip(video_path)
     result = CompositeVideoClip([video, subtitles.set_pos(('center','bottom'))])
-
     result.write_videofile("./output/subs.mp4", fps=video.fps, temp_audiofile="temp-audio.m4a", remove_temp=True, codec="libx264", audio_codec="aac")
 
 
@@ -110,12 +115,11 @@ def get_youtube_video_audio(url):
     yt = YouTube(str(url))
     video = yt.streams.filter(only_audio=True).first()
     out_file = video.download(output_path="./video-audio")
-    #base, ext = os.path.splitext(out_file)
     new_file = "./video-audio/musicMp3" + '.mp3'
     os.rename(out_file, new_file)
     subprocess.call(['ffmpeg', '-i', './video-audio/musicMp3.mp3','./video-audio/musicWav.wav'])
     print(yt.title + " has been successfully downloaded.")
-
+    return(yt.title)
 
 def get_video_transcription(youtube_url):
     id=extract.video_id(youtube_url)
@@ -133,4 +137,24 @@ def cleanup_files():
 
 
 if __name__ == '__main__':
-    create_video("https://www.youtube.com/watch?v=Vg--KbkIffY", ", A high contrast digital illustration, trending on artstation HQ, Kitchen, Food", 60, 6)
+    #create_video("https://www.youtube.com/watch?v=VuNIsY6JdUw", ", path traced, highly detailed, high quality, digital painting, alena aenami, lilia alvarado, shinji aramaki, karol bak, alphonse mucha, tom bagshaw.", 30, 12)
+
+
+
+
+    import cv2
+    import base64
+    img = cv2.imread('./output_212x212.png')
+    jpg_img = cv2.imencode('.png', img)
+    b64_string = base64.b64encode(jpg_img[1]).decode('utf-8')
+    subprocess.run("pbcopy", universal_newlines=True, input=b64_string)
+
+
+# painting by leyendecker, studio ghibli, fantasy, medium shot, asymmetrical, intricate, elegant, illustration, by greg rutkowski, by greg tocchini, by james gilleard.
+# , by Gregory Manchess, Digital illustration, trending on artstation HQ.
+
+# by gregory manchess, digital illustration, trending on artstation hq, elegant, beautiful, portrait.
+
+# , path traced, highly detailed, high quality, digital painting, alena aenami, lilia alvarado, shinji aramaki, karol bak, alphonse mucha, tom bagshaw. <------ use this!!! 50+ steps
+
+# painting by sargent and leyendecker studio ghibli fantasy medium shot asymmetrical intricate elegant matte painting illustration hearthstone by greg rutkowski by greg tocchini by james gillear.
