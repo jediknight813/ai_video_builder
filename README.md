@@ -1,4 +1,4 @@
-# ai_video_builder
+# Ai-Video-Builder
 
 Make videos with ai images from youtube captions.
 
