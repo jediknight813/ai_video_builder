@@ -9,6 +9,7 @@ import os
 from pytube import extract
 from youtube_transcript_api import YouTubeTranscriptApi
 from pathlib import Path
+import whisper
 
 
 def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, portrait, landscape art", length="full", steps=16):
@@ -17,7 +18,7 @@ def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, po
     size = (1000, 512)
     cleanup_files()
     youtube_video_title = get_youtube_video_audio(youtube_url)
-    song_Data = get_video_transcription(youtube_url)
+    song_Data = get_video_transcription()
 
     if length == "full":
         audio_seg = AudioSegment.from_wav("./video-audio/musicWav.wav")
@@ -36,13 +37,14 @@ def create_video(youtube_url, styles=", detailed aesthetic lofi illustration, po
     if color_clip(size, total_in_secs) == "finished":
         
         for i in song_Data:
-            subtitles.append([(i["start"], i["duration"]+i["start"]), i["text"]])
+            subtitles.append([(i["start"], i["end"]), i["text"]])
             if len(['text']) >= 1:
-                sub_data.append([(i["start"], i["duration"]+i["start"]), i["text"]])
+                sub_data.append([(i["start"], i["end"]), i["text"]])
         
 
         build_thumbnail(youtube_video_title+ ", album cover"+styles, steps)
         imageGen = add_images(sub_data, styles, steps)
+        print(subtitles)
         add_subtitles(imageGen, subtitles)
         videoclip = VideoFileClip("./output/subs.mp4")
         videoclip = videoclip.set_audio(audioclip)
@@ -121,14 +123,10 @@ def get_youtube_video_audio(url):
     print(yt.title + " has been successfully downloaded.")
     return(yt.title)
 
-def get_video_transcription(youtube_url):
-    id=extract.video_id(youtube_url)
-    transcript_list = YouTubeTranscriptApi.list_transcripts(id)
-    try:
-        transcript = transcript_list.find_manually_created_transcript(['en'])  
-    except:
-        transcript = transcript_list.find_generated_transcript(['en'])
-    return transcript.fetch()
+def get_video_transcription():
+    model = whisper.load_model("base.en")
+    result = model.transcribe("./video-audio/musicMp3.mp3", language="en", fp16=False)
+    return result["segments"]
 
 
 def cleanup_files():
@@ -137,17 +135,9 @@ def cleanup_files():
 
 
 if __name__ == '__main__':
-    #create_video("https://www.youtube.com/watch?v=VuNIsY6JdUw", ", path traced, highly detailed, high quality, digital painting, alena aenami, lilia alvarado, shinji aramaki, karol bak, alphonse mucha, tom bagshaw.", 30, 12)
+    create_video("https://www.youtube.com/watch?v=NI6aOFI7hms", ", path traced, highly detailed, high quality, digital painting, alena aenami, lilia alvarado, shinji aramaki, karol bak, alphonse mucha, tom bagshaw.", 5, 1)
 
 
-
-
-    import cv2
-    import base64
-    img = cv2.imread('./output_212x212.png')
-    jpg_img = cv2.imencode('.png', img)
-    b64_string = base64.b64encode(jpg_img[1]).decode('utf-8')
-    subprocess.run("pbcopy", universal_newlines=True, input=b64_string)
 
 
 # painting by leyendecker, studio ghibli, fantasy, medium shot, asymmetrical, intricate, elegant, illustration, by greg rutkowski, by greg tocchini, by james gilleard.
