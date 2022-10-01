@@ -1,14 +1,10 @@
 from hashlib import new
-import py_compile
-from re import I
 from moviepy.editor import *
 from moviepy.video.tools.subtitles import SubtitlesClip
 from pydub import *
 import subprocess
 from pytube import YouTube
 import os
-from pytube import extract
-from youtube_transcript_api import YouTubeTranscriptApi
 from pathlib import Path
 import whisper
 
@@ -123,6 +119,7 @@ def get_youtube_video_audio(url):
     print(yt.title + " has been successfully downloaded.")
     return(yt.title)
 
+
 def get_video_transcription():
     model = whisper.load_model("base.en")
     result = model.transcribe("./video-audio/musicMp3.mp3", language="en", fp16=False)
@@ -132,19 +129,9 @@ def get_video_transcription():
 def cleanup_files():
     [f.unlink() for f in Path("./video-audio").glob("*") if f.is_file()] 
     [f.unlink() for f in Path("./output").glob("*") if f.is_file()] 
+    [f.unlink() for f in Path("./images").glob("*") if f.is_file()] 
 
 
 if __name__ == '__main__':
     create_video("https://www.youtube.com/watch?v=NI6aOFI7hms", ", path traced, highly detailed, high quality, digital painting, alena aenami, lilia alvarado, shinji aramaki, karol bak, alphonse mucha, tom bagshaw.", 5, 1)
 
-
-
-
-# painting by leyendecker, studio ghibli, fantasy, medium shot, asymmetrical, intricate, elegant, illustration, by greg rutkowski, by greg tocchini, by james gilleard.
-# , by Gregory Manchess, Digital illustration, trending on artstation HQ.
-
-# by gregory manchess, digital illustration, trending on artstation hq, elegant, beautiful, portrait.
-
-# , path traced, highly detailed, high quality, digital painting, alena aenami, lilia alvarado, shinji aramaki, karol bak, alphonse mucha, tom bagshaw. <------ use this!!! 50+ steps
-
-# painting by sargent and leyendecker studio ghibli fantasy medium shot asymmetrical intricate elegant matte painting illustration hearthstone by greg rutkowski by greg tocchini by james gillear.
