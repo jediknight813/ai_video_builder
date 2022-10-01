@@ -70,5 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("--mask", type=str, default=None, help="mask of the region to inpaint on the initial image")
     # output name
     parser.add_argument("--output", type=str, default="output.png", help="output image name")
+    parser.add_argument('--local', default=False, action='store_true', help='Optional. Enable use of locally available network files instead of downloading via huggingface_hub.')
+
     args = parser.parse_args()
     main(args)

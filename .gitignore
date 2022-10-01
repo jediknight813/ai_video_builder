@@ -2,3 +2,4 @@ venv/
 .venv/
 .venv
 venv/bin
+stable_diffusion/Models

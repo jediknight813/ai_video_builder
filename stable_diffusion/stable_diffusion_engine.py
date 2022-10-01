@@ -1,5 +1,4 @@
-
-
+from distutils import core
 import inspect
 import numpy as np
 # openvino
@@ -11,13 +10,15 @@ from tqdm import tqdm
 from huggingface_hub import hf_hub_download
 from diffusers import LMSDiscreteScheduler, PNDMScheduler
 import cv2
-
+import os
 
 def result(var):
     return next(iter(var.values()))
 
 
 class StableDiffusionEngine:
+    os.environ['TRANSFORMERS_CACHE'] = './Models/'
+
     def __init__(
             self,
             scheduler,
@@ -29,29 +30,30 @@ class StableDiffusionEngine:
         self.scheduler = scheduler
         # models
         self.core = Core()
+        self.core.set_property("CPU", {"INFERENCE_NUM_THREADS": 6})
         # text features
         self._text_encoder = self.core.read_model(
-            hf_hub_download(repo_id=model, filename="text_encoder.xml"),
-            hf_hub_download(repo_id=model, filename="text_encoder.bin")
+            "stable_diffusion/Models/text_encoder.xml",
+            "stable_diffusion/Models/text_encoder.bin"
         )
         self.text_encoder = self.core.compile_model(self._text_encoder, device)
         # diffusion
         self._unet = self.core.read_model(
-            hf_hub_download(repo_id=model, filename="unet.xml"),
-            hf_hub_download(repo_id=model, filename="unet.bin")
+            "stable_diffusion/Models/unet.xml",
+            "stable_diffusion/Models/unet.bin"
         )
         self.unet = self.core.compile_model(self._unet, device)
         self.latent_shape = tuple(self._unet.inputs[0].shape)[1:]
         # decoder
         self._vae_decoder = self.core.read_model(
-            hf_hub_download(repo_id=model, filename="vae_decoder.xml"),
-            hf_hub_download(repo_id=model, filename="vae_decoder.bin")
+            "stable_diffusion/Models/vae_decoder.xml",
+            "stable_diffusion/Models/vae_decoder.bin"
         )
         self.vae_decoder = self.core.compile_model(self._vae_decoder, device)
         # encoder
         self._vae_encoder = self.core.read_model(
-            hf_hub_download(repo_id=model, filename="vae_encoder.xml"),
-            hf_hub_download(repo_id=model, filename="vae_encoder.bin")
+            "stable_diffusion/Models/vae_encoder.xml",
+            "stable_diffusion/Models/vae_encoder.bin"
         )
         self.vae_encoder = self.core.compile_model(self._vae_encoder, device)
         self.init_image_shape = tuple(self._vae_encoder.inputs[0].shape)[2:]
